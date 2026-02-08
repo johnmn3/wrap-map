@@ -238,6 +238,166 @@
     (is (= 10 (get callable-map :base)) "Lookup still works (invoke not called for arity 1/2 by default)")
     (is (= :nf (get callable-map :missing :nf)) "Lookup still works")))
 
+(deftest test-invoke-variadic-all-arities
+  (let [;; This invoke handler returns a vector of all args it received,
+        ;; allowing us to verify every argument is passed through correctly.
+        callable-map
+        (w/assoc
+          (wrap :base 10)
+          :invoke-variadic
+          (fn [_e _m & args]
+            (vec args)))]
+    ;; Arity 0
+    (is (= [] (callable-map))
+        "Invoke with 0 args should return empty vector")
+    ;; Arity 1
+    (is (= [1] (callable-map 1))
+        "Invoke with 1 arg")
+    ;; Arity 2
+    (is (= [1 2] (callable-map 1 2))
+        "Invoke with 2 args")
+    ;; Arity 3
+    (is (= [1 2 3] (callable-map 1 2 3))
+        "Invoke with 3 args")
+    ;; Arity 4
+    (is (= [1 2 3 4] (callable-map 1 2 3 4))
+        "Invoke with 4 args")
+    ;; Arity 5
+    (is (= [1 2 3 4 5] (callable-map 1 2 3 4 5))
+        "Invoke with 5 args")
+    ;; Arity 6
+    (is (= [1 2 3 4 5 6] (callable-map 1 2 3 4 5 6))
+        "Invoke with 6 args")
+    ;; Arity 7
+    (is (= [1 2 3 4 5 6 7] (callable-map 1 2 3 4 5 6 7))
+        "Invoke with 7 args")
+    ;; Arity 8
+    (is (= [1 2 3 4 5 6 7 8] (callable-map 1 2 3 4 5 6 7 8))
+        "Invoke with 8 args")
+    ;; Arity 9
+    (is (= [1 2 3 4 5 6 7 8 9] (callable-map 1 2 3 4 5 6 7 8 9))
+        "Invoke with 9 args")
+    ;; Arity 10 - this is where the a10-drop bug was
+    (is (= [1 2 3 4 5 6 7 8 9 10] (callable-map 1 2 3 4 5 6 7 8 9 10))
+        "Invoke with 10 args (regression: a10 was dropped)")
+    ;; Arity 11
+    (is (= [1 2 3 4 5 6 7 8 9 10 11] (callable-map 1 2 3 4 5 6 7 8 9 10 11))
+        "Invoke with 11 args")
+    ;; Arity 12
+    (is (= [1 2 3 4 5 6 7 8 9 10 11 12] (callable-map 1 2 3 4 5 6 7 8 9 10 11 12))
+        "Invoke with 12 args")
+    ;; Arity 13
+    (is (= [1 2 3 4 5 6 7 8 9 10 11 12 13] (callable-map 1 2 3 4 5 6 7 8 9 10 11 12 13))
+        "Invoke with 13 args")
+    ;; Arity 14
+    (is (= [1 2 3 4 5 6 7 8 9 10 11 12 13 14] (callable-map 1 2 3 4 5 6 7 8 9 10 11 12 13 14))
+        "Invoke with 14 args")
+    ;; Arity 15
+    (is (= [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15] (callable-map 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))
+        "Invoke with 15 args")
+    ;; Arity 16
+    (is (= [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16] (callable-map 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16))
+        "Invoke with 16 args")
+    ;; Arity 17 - first arity hitting handle-invoke's variadic path
+    (is (= [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17] (callable-map 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17))
+        "Invoke with 17 args (first variadic path in handle-invoke)")
+    ;; Arity 18
+    (is (= [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18] (callable-map 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18))
+        "Invoke with 18 args")
+    ;; Arity 19
+    (is (= [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19] (callable-map 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19))
+        "Invoke with 19 args")
+    ;; Arity 20
+    (is (= [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20] (callable-map 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))
+        "Invoke with 20 args (max fixed IFn arity)")
+    ;; Arity 21 - uses IFn's rest-args/applyTo path
+    (is (= (vec (range 1 22)) (apply callable-map (range 1 22)))
+        "Invoke with 21 args (IFn variadic path)")
+    ;; Arity 25 - well beyond fixed arities
+    (is (= (vec (range 1 26)) (apply callable-map (range 1 26)))
+        "Invoke with 25 args")))
+
+(deftest test-invoke-variadic-arg-values
+  (let [;; This handler sums all numeric args on top of :base, verifying
+        ;; that the actual argument values are correct (not just count).
+        sum-map
+        (w/assoc
+          (wrap :base 100)
+          :invoke-variadic
+          (fn [_e m & args]
+            (+ (:base m) (apply + args))))]
+    ;; Arity 0: just :base
+    (is (= 100 (sum-map))
+        "0 args: just base")
+    ;; Arity 1
+    (is (= 105 (sum-map 5))
+        "1 arg: base + 5")
+    ;; Arity 5
+    (is (= 115 (sum-map 1 2 3 4 5))
+        "5 args: base + 1+2+3+4+5 = 115")
+    ;; Arity 10 - the formerly buggy arity
+    (is (= 155 (sum-map 1 2 3 4 5 6 7 8 9 10))
+        "10 args: base + sum(1..10) = 155")
+    ;; Arity 16 - last explicit handle-invoke arity
+    (is (= 236 (sum-map 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16))
+        "16 args: base + sum(1..16) = 236")
+    ;; Arity 20
+    (is (= 310 (sum-map 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))
+        "20 args: base + sum(1..20) = 310")
+    ;; Arity 21+ via apply
+    (is (= (+ 100 (apply + (range 1 22)))
+           (apply sum-map (range 1 22)))
+        "21 args via apply: base + sum(1..21)")))
+
+(deftest test-invoke-default-arity-errors
+  (let [m (wrap :a 1 :b 2)]
+    ;; Arity 0: invalid
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo #"Invalid arity: 0"
+          (m)))
+    ;; Arity 1: valid map lookup
+    (is (= 1 (m :a)))
+    ;; Arity 2: valid map lookup with not-found
+    (is (= :nf (m :missing :nf)))
+    ;; Arity 3: invalid
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo #"Invalid arity: 3"
+          (m 1 2 3)))
+    ;; Arity 4: invalid
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo #"Invalid arity: 4"
+          (m 1 2 3 4)))
+    ;; Arity 5: invalid
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo #"Invalid arity: 5"
+          (m 1 2 3 4 5)))
+    ;; Arity 10: invalid
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo #"Invalid arity: 10"
+          (m 1 2 3 4 5 6 7 8 9 10)))
+    ;; Arity 16: invalid
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo #"Invalid arity: 16"
+          (m 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)))
+    ;; Arity 20: invalid
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo #"Invalid arity: 20"
+          (m 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)))))
+
+(deftest test-invoke-variadic-receives-env-and-map
+  (let [;; Verify the handler receives the correct env and map
+        callable-map
+        (w/assoc
+          (wrap :x 42 :y 99)
+          :invoke-variadic
+          (fn [e m & args]
+            {:has-invoke? (some? (get e :invoke-variadic))
+             :map-data (select-keys m [:x :y])
+             :arg-count (count args)
+             :args (vec args)}))]
+    (let [result (callable-map :a :b :c)]
+      (is (= true (:has-invoke? result))
+          "Handler should receive env with :invoke-variadic")
+      (is (= {:x 42 :y 99} (:map-data result))
+          "Handler should receive the underlying map data")
+      (is (= 3 (:arg-count result))
+          "Handler should receive all args")
+      (is (= [:a :b :c] (:args result))
+          "Args should be passed in order"))))
+
 (deftest test-override-transient-logging
   (let [log (atom [])
         logging-map
@@ -288,6 +448,10 @@
     (test-override-get-default-value)
     (test-override-assoc-validation)
     (test-override-invoke-variadic)
+    (test-invoke-variadic-all-arities)
+    (test-invoke-variadic-arg-values)
+    (test-invoke-default-arity-errors)
+    (test-invoke-variadic-receives-env-and-map)
     (test-override-transient-logging)
     (test-override-toString))
 

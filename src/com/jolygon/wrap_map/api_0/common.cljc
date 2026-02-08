@@ -86,7 +86,7 @@
      (default-map-invoke e m a1 a2 a3 a4 a5 a6 a7 a8 a9)))
   ([e m a1 a2 a3 a4 a5 a6 a7 a8 a9 a10]
    (if-let [wrap-invoke (c/get e :invoke-variadic)]
-     (wrap-invoke e m a1 a2 a3 a4 a5 a6 a7 a8 a9)
+     (wrap-invoke e m a1 a2 a3 a4 a5 a6 a7 a8 a9 a10)
      (default-map-invoke e m a1 a2 a3 a4 a5 a6 a7 a8 a9 a10)))
   ([e m a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11]
    (if-let [wrap-invoke (c/get e :invoke-variadic)]
