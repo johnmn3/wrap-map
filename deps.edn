@@ -5,7 +5,8 @@
  {:dev {:extra-paths ["dev"]}
   :outdated {:extra-deps {com.github.liquidz/antq ^:antq/exclude {:mvn/version "2.11.1276"}}
              :main-opts ["-m" "antq.core" "--no-diff"]}
-  :build {:deps {io.github.abogoyavlensky/slim {:mvn/version "0.3.2"}
+  :build {:deps {org.clojure/clojure {:mvn/version "1.12.0"}
+                 io.github.abogoyavlensky/slim {:mvn/version "0.3.2"}
                  slipset/deps-deploy {:mvn/version "0.2.2"}}
           :ns-default slim.lib
           :exec-args {:version "0.1.12"
