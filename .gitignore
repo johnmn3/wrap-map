@@ -23,3 +23,5 @@ cljs-test-runner-out/
 .cljs_node_repl/
 .cursorignore
 .scratch/
+.proxy-shim.pid
+script/proxy_shim.py
