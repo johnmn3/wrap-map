@@ -2,6 +2,16 @@
 
 *The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)*
 
+## [0.1.12] - 2026-02-08
+
+### Fixed
+
+- Fixed handle-invoke arity 10 dropping the 10th argument (`a10`) when a custom `:invoke-variadic` handler was registered.
+
+### Added
+
+- Comprehensive invoke extension tests covering all arities 0-25.
+
 ## [0.1.8 ] - 2025-04-20
 
 ### Added
